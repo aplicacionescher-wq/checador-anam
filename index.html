@@ -3,71 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema Valle Esmeralda</title>
+    <title>Valle Esmeralda - ERP Asistencia</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="app">
-        <div id="login-screen">
+        <section id="view-checador" class="view active">
             <div class="card">
-                <h1>Acceso Corporativo</h1>
-                <input type="email" id="email" placeholder="Correo electrónico">
-                <input type="password" id="password" placeholder="Contraseña">
-                <button id="btn-login" class="btn-login">INGRESAR</button>
-            </div>
-        </div>
-
-        <div id="main-panel" style="display:none;">
-            <header class="navbar">
-                <div id="user-info">Cargando...</div>
-                <button id="btn-logout" class="btn-small">Cerrar Sesión</button>
-            </header>
-
-            <section id="view-checador" class="card view-content">
-                <p id="current-time" style="font-size: 2.5rem; font-weight: bold; margin: 10px 0;"></p>
-                <div class="check-buttons">
-                    <button id="btn-check-in" class="btn-check btn-in">ENTRADA</button>
-                    <button id="btn-check-out" class="btn-check btn-out">SALIDA</button>
-                </div>
-                <div id="status-msg"></div>
-
-                <div id="nav-admin" class="nav-extra" style="display:none;">
-                    <button onclick="switchView('view-reportes')" class="btn-nav">📊 Panel de Consultas y Justificaciones</button>
-                </div>
-                <div id="nav-jefe" class="nav-extra" style="display:none;">
-                    <button onclick="switchView('view-horarios')" class="btn-nav" style="background:#007bff;">📅 Gestión de Horarios por Área</button>
-                </div>
-            </section>
-
-            <section id="view-reportes" class="card view-content" style="display:none;">
-                <button onclick="switchView('view-checador')" class="btn-small">⬅ Volver al Checador</button>
-                <h3>Reportes e Incidencias</h3>
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Nombre</th>
-                                <th>Entrada/Salida</th>
-                                <th>Estado</th>
-                                <th>Justificación</th>
-                                <th>Acción</th>
-                            </tr>
-                        </thead>
-                        <tbody id="report-body"></tbody>
-                    </table>
-                </div>
-            </section>
-
-            <section id="view-horarios" class="card view-content" style="display:none;">
-                <button onclick="switchView('view-checador')" class="btn-small">⬅ Volver al Checador</button>
-                <h3>Configuración de Horario Semanal</h3>
-                <select id="select-empleado"><option value="">Seleccione al trabajador...</option></select>
+                <div class="header-logo">🏢 Valle Esmeralda</div>
+                <h1 id="live-clock">00:00:00</h1>
+                <p id="live-date"></p>
                 
-                <div id="contenedor-semanal" class="grid-horarios">
+                <div class="input-group">
+                    <input type="number" id="emp-number" placeholder="Número de Empleado">
+                    <input type="password" id="emp-pass" placeholder="PIN">
+                </div>
+
+                <div class="check-actions">
+                    <button id="btn-in" class="btn-check in">ENTRADA</button>
+                    <button id="btn-out" class="btn-check out">SALIDA</button>
+                </div>
+                
+                <p id="geo-status" class="status-pending">Obteniendo ubicación...</p>
+                <button id="btn-admin-access" class="btn-link">Acceso Administrativo</button>
+            </div>
+        </section>
+
+        <section id="view-admin" class="view">
+            <nav class="admin-nav">
+                <button onclick="switchTab('tab-reportes')">📊 Reportes</button>
+                <button onclick="switchTab('tab-horarios')">📅 Horarios</button>
+                <button id="btn-exit" class="btn-exit">Salir</button>
+            </nav>
+
+            <div class="admin-container">
+                <div id="tab-reportes" class="tab-content">
+                    <h3>Auditoría de Asistencias y Retardos</h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Empleado</th>
+                                    <th>Registro</th>
+                                    <th>Estatus</th>
+                                    <th>Mapa</th>
+                                    <th>Justificar</th>
+                                </tr>
+                            </thead>
+                            <tbody id="report-body"></tbody>
+                        </table>
                     </div>
-                <button id="btn-guardar-semana" class="btn-login" style="margin-top:20px; background:#007bff;">GUARDAR ROL SEMANAL</button>
-            </section>
-        </div>
+                </div>
+
+                <div id="tab-horarios" class="tab-content" style="display:none;">
+                    <h3>Gestión de Personal y Roles</h3>
+                    <select id="select-staff"><option>Cargando personal...</option></select>
+                    <div id="grid-semana" class="grid-semana"></div>
+                    <button id="btn-save-rol" class="btn-primary">Actualizar Semana</button>
+                </div>
+            </div>
+        </section>
     </div>
     <script type="module" src="app.js"></script>
 </body>
