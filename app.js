@@ -3,12 +3,13 @@ import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from
 import { getFirestore, doc, getDoc, setDoc, collection, query, where, getDocs, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
-    apiKey: "TU_API_KEY",
-    authDomain: "TU_DOMINIO.firebaseapp.com",
-    projectId: "TU_PROJECT_ID",
-    storageBucket: "TU_BUCKET.appspot.com",
-    messagingSenderId: "TU_SENDER_ID",
-    appId: "TU_APP_ID"
+  apiKey: "AIzaSyC6bo4zO4vUl7jbfm1sVS59GqoP3vJeyR0",
+  authDomain: "checador-anam.firebaseapp.com",
+  databaseURL: "https://checador-anam-default-rtdb.firebaseio.com",
+  projectId: "checador-anam",
+  storageBucket: "checador-anam.firebasestorage.app",
+  messagingSenderId: "376706550668",
+  appId: "1:376706550668:web:87e0e9f1cba7fcbe2824a9"
 };
 
 const app = initializeApp(firebaseConfig);
