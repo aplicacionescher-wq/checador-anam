@@ -1,13 +1,13 @@
 :root { --primary: #28a745; --danger: #dc3545; --dark: #343a40; }
-body { font-family: sans-serif; background: #f0f2f5; margin: 0; padding: 15px; display: flex; justify-content: center; }
-#app { width: 100%; max-width: 600px; }
+body { font-family: sans-serif; background: #f0f2f5; padding: 10px; display: flex; justify-content: center; }
+#app { width: 100%; max-width: 700px; }
 .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; text-align: center; }
-input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-button { cursor: pointer; border: none; border-radius: 8px; font-weight: bold; transition: 0.3s; }
-.btn-login { background: var(--primary); color: white; width: 100%; padding: 12px; }
-.btn-check { color: white; width: 50%; padding: 20px; font-size: 1.1rem; }
-.btn-small { background: #6c757d; color: white; padding: 5px 10px; font-size: 0.8rem; }
-.table-container { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-th, td { padding: 8px; border-bottom: 1px solid #eee; text-align: left; }
-.retardo { color: var(--danger); font-weight: bold; }
+.btn-check { color: white; width: 120px; padding: 15px; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; }
+.btn-nav { width: 100%; padding: 12px; background: #495057; color: white; border: none; border-radius: 8px; cursor: pointer; margin-bottom: 5px; }
+.btn-small { background: #6c757d; color: white; padding: 5px 10px; border-radius: 5px; border: none; cursor: pointer; margin-bottom: 10px; }
+.table-container { overflow-x: auto; margin-top: 15px; }
+table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+th, td { border-bottom: 1px solid #eee; padding: 8px; text-align: left; }
+.grid-semanal { display: grid; gap: 10px; margin-top: 15px; text-align: left; }
+.dia-row { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #f9f9f9; padding: 5px 0; }
+input, select { padding: 5px; border-radius: 4px; border: 1px solid #ccc; }
