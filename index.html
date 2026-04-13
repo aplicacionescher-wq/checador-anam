@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema Valle Esmeralda</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
 </head>
 <body>
     <div id="app">
@@ -24,30 +25,30 @@
             </header>
 
             <section id="view-checador" class="card">
-                <p id="current-time" style="font-size: 2.5rem; font-weight: bold;"></p>
-                <div style="display: flex; gap: 10px; justify-content: center;">
-                    <button id="btn-check-in" class="btn-check" style="background:#28a745;">ENTRADA</button>
-                    <button id="btn-check-out" class="btn-check" style="background:#dc3545;">SALIDA</button>
+                <p id="current-time" style="font-size: 2.5rem; font-weight: bold; margin: 10px 0;"></p>
+                <div class="check-buttons">
+                    <button id="btn-check-in" class="btn-check btn-in">ENTRADA</button>
+                    <button id="btn-check-out" class="btn-check btn-out">SALIDA</button>
                 </div>
-                <div id="status-msg" style="margin-top: 15px;"></div>
+                <div id="status-msg"></div>
 
-                <div id="nav-admin" style="display:none; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
-                    <button onclick="switchView('view-reportes')" class="btn-nav">📊 Consultas y Justificaciones</button>
+                <div id="nav-admin" class="nav-extra" style="display:none;">
+                    <button onclick="switchView('view-reportes')" class="btn-nav">📊 Panel de Consultas y Justificaciones</button>
                 </div>
-                <div id="nav-jefe" style="display:none; margin-top: 10px;">
-                    <button onclick="switchView('view-horarios')" class="btn-nav" style="background:#007bff;">📅 Gestionar Horarios Semanales</button>
+                <div id="nav-jefe" class="nav-extra" style="display:none;">
+                    <button onclick="switchView('view-horarios')" class="btn-nav" style="background:#007bff;">📅 Gestión de Horarios por Área</button>
                 </div>
             </section>
 
             <section id="view-reportes" class="card" style="display:none;">
-                <button onclick="switchView('view-checador')" class="btn-small">⬅ Volver al Checador</button>
-                <h3>Reportes y Justificaciones</h3>
+                <button onclick="switchView('view-checador')" class="btn-small">⬅ Volver</button>
+                <h3>Consultas y Justificaciones</h3>
                 <div class="table-container">
                     <table>
                         <thead>
                             <tr>
-                                <th>Nombre</th>
-                                <th>Entrada/Salida</th>
+                                <th>Personal</th>
+                                <th>E/S</th>
                                 <th>Estado</th>
                                 <th>Justificación</th>
                                 <th>Acción</th>
@@ -59,14 +60,13 @@
             </section>
 
             <section id="view-horarios" class="card" style="display:none;">
-                <button onclick="switchView('view-checador')" class="btn-small">⬅ Volver al Checador</button>
-                <h3>Gestión de Horario Semanal</h3>
-                <select id="select-empleado"><option value="">Seleccionar Empleado...</option></select>
+                <button onclick="switchView('view-checador')" class="btn-small">⬅ Volver</button>
+                <h3>Configuración de Horario Semanal</h3>
+                <select id="select-empleado"><option value="">Seleccione al trabajador...</option></select>
                 
-                <div class="grid-semanal">
-                    <div id="contenedor-semanal"></div>
-                </div>
-                <button id="btn-guardar-semana" class="btn-login" style="margin-top:15px;">GUARDAR HORARIO SEMANAL</button>
+                <div id="contenedor-semanal" class="grid-horarios">
+                    </div>
+                <button id="btn-guardar-semana" class="btn-login" style="margin-top:20px;">GUARDAR SEMANA</button>
             </section>
         </div>
     </div>
