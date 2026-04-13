@@ -1,8 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, collection, query, where, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, collection, query, where, onSnapshot, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// CONFIGURACIÓN DE TU PROYECTO (Obtenla en la consola de Firebase)
 const firebaseConfig = {
   apiKey: "AIzaSyC6bo4zO4vUl7jbfm1sVS59GqoP3vJeyR0",
   authDomain: "checador-anam.firebaseapp.com",
@@ -16,37 +15,50 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// --- Manejo de Autenticación ---
+// Actualizar reloj en pantalla
+setInterval(() => {
+    const ahora = new Date();
+    document.getElementById('current-time').innerText = ahora.toLocaleTimeString();
+}, 1000);
+
+// LOGIN
 document.getElementById('btn-login').addEventListener('click', async () => {
     const email = document.getElementById('email').value;
     const pass = document.getElementById('password').value;
     try {
         await signInWithEmailAndPassword(auth, email, pass);
-    } catch (e) { alert("Error de acceso: " + e.message); }
+    } catch (e) { alert("Usuario o contraseña incorrectos."); }
 });
 
+// LOGOUT
 document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
 
+// MONITOR DE ESTADO DE SESIÓN
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('main-panel').style.display = 'block';
-        
-        // Obtener datos del usuario (Rol y Horario)
-        const userDoc = await getDoc(doc(db, "usuarios", user.uid));
-        const userData = userDoc.data();
-        document.getElementById('user-info').innerText = `${userData.nombre} (${userData.area})`;
-
-        if (userData.rol === 'admin' || userData.rol === 'supervisor') {
-            document.getElementById('admin-section').style.display = 'block';
-        }
+        cargarDatosUsuario(user.uid);
     } else {
         document.getElementById('login-screen').style.display = 'block';
         document.getElementById('main-panel').style.display = 'none';
     }
 });
 
-// --- Lógica de Marcaje con Tolerancia ---
+async function cargarDatosUsuario(uid) {
+    const docRef = doc(db, "usuarios", uid);
+    const snap = await getDoc(docRef);
+    if (snap.exists()) {
+        const data = snap.data();
+        document.getElementById('user-info').innerText = `${data.nombre} | ${data.area}`;
+        if (data.rol === 'admin' || data.rol === 'supervisor') {
+            document.getElementById('admin-section').style.display = 'block';
+            cargarReportes(data.area, data.rol);
+        }
+    }
+}
+
+// MARCAR ASISTENCIA
 document.getElementById('btn-check').addEventListener('click', async () => {
     const user = auth.currentUser;
     const userDoc = await getDoc(doc(db, "usuarios", user.uid));
@@ -55,27 +67,59 @@ document.getElementById('btn-check').addEventListener('click', async () => {
     const ahora = new Date();
     const horaActual = ahora.getHours();
     const minActual = ahora.getMinutes();
-    
-    // Regla: Si la hora es mayor al horario base O si es la hora justa pero pasaron 15 min
+    const fechaHoy = ahora.toISOString().split('T')[0];
+
     let estado = "A tiempo";
+    // Tolerancia de 15 minutos
     if (horaActual > horario_base || (horaActual === horario_base && minActual > 15)) {
         estado = "Retardo";
     }
 
-    const fechaHoy = ahora.toISOString().split('T')[0];
-    
     try {
         await setDoc(doc(db, "asistencias", `${user.uid}_${fechaHoy}`), {
             uid: user.uid,
             nombre,
             area,
             fecha: fechaHoy,
-            hora_entrada: `${horaActual}:${minActual}`,
+            hora_entrada: `${horaActual}:${minActual < 10 ? '0'+minActual : minActual}`,
             estado,
             justificacion: "",
-            aprobado: false,
             timestamp: serverTimestamp()
         });
-        document.getElementById('status-msg').innerText = `¡Registrado como: ${estado}!`;
-    } catch (e) { console.error(e); }
+        document.getElementById('status-msg').innerHTML = `<b style="color:green">Registro exitoso: ${estado}</b>`;
+    } catch (e) { alert("Error al registrar."); }
 });
+
+// CARGAR REPORTES EN TIEMPO REAL
+function cargarReportes(area, rol) {
+    const q = rol === 'admin' 
+        ? collection(db, "asistencias") 
+        : query(collection(db, "asistencias"), where("area", "==", area));
+
+    onSnapshot(q, (snapshot) => {
+        const tbody = document.getElementById('report-body');
+        tbody.innerHTML = "";
+        snapshot.forEach((docSnap) => {
+            const res = docSnap.data();
+            const fila = `
+                <tr>
+                    <td>${res.nombre}</td>
+                    <td class="${res.estado === 'Retardo' ? 'retardo' : ''}">${res.estado}</td>
+                    <td>${res.justificacion || '<i>Sin justificar</i>'}</td>
+                    <td>
+                        <button onclick="justificar('${docSnap.id}')" class="btn-small">Justificar</button>
+                    </td>
+                </tr>
+            `;
+            tbody.innerHTML += fila;
+        });
+    });
+}
+
+// Función global para justificar (necesaria para el onclick del string)
+window.justificar = async (id) => {
+    const motivo = prompt("Ingrese la justificación:");
+    if (motivo) {
+        await updateDoc(doc(db, "asistencias", id), { justificacion: motivo });
+    }
+};
