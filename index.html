@@ -3,73 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reloj Checador Valle Esmeralda</title>
+    <title>Sistema Valle Esmeralda</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#28a745">
 </head>
 <body>
     <div id="app">
         <div id="login-screen">
             <div class="card">
-                <h1>Reloj Checador</h1>
+                <h1>Acceso al Sistema</h1>
                 <input type="email" id="email" placeholder="Correo electrónico">
                 <input type="password" id="password" placeholder="Contraseña">
-                <button id="btn-login" class="btn-login">INGRESAR</button>
+                <button id="btn-login" class="btn-login">ENTRAR</button>
             </div>
         </div>
 
         <div id="main-panel" style="display:none;">
             <header>
                 <div id="user-info">Cargando...</div>
-                <button id="btn-logout" class="btn-small">Salir</button>
+                <button id="btn-logout" class="btn-small">Cerrar Sesión</button>
             </header>
 
-            <main>
-                <section class="card check-section">
-                    <h2>Asistencia Diaria</h2>
-                    <p id="current-time" style="font-size: 2rem; font-weight: bold;"></p>
-                    <div style="display: flex; gap: 10px;">
-                        <button id="btn-check-in" class="btn-check" style="background:#28a745;">ENTRADA</button>
-                        <button id="btn-check-out" class="btn-check" style="background:#dc3545;">SALIDA</button>
-                    </div>
-                    <div id="status-msg" style="margin-top: 15px;"></div>
-                </section>
+            <section id="view-checador" class="card">
+                <p id="current-time" style="font-size: 2.5rem; font-weight: bold;"></p>
+                <div style="display: flex; gap: 10px; justify-content: center;">
+                    <button id="btn-check-in" class="btn-check" style="background:#28a745;">ENTRADA</button>
+                    <button id="btn-check-out" class="btn-check" style="background:#dc3545;">SALIDA</button>
+                </div>
+                <div id="status-msg" style="margin-top: 15px;"></div>
 
-                <section id="gestion-horarios" class="card" style="display:none; border-top: 4px solid #007bff;">
-                    <h3>Asignar Horarios</h3>
-                    <select id="select-empleado"><option value="">Seleccionar Personal...</option></select>
-                    <select id="select-hora">
-                        <option value="7">07:00 AM</option>
-                        <option value="9">09:00 AM</option>
-                        <option value="10">10:00 AM</option>
-                        <option value="11">11:00 AM</option>
-                        <option value="12">12:00 PM</option>
-                        <option value="15">03:00 PM</option>
-                        <option value="23">11:00 PM</option>
-                    </select>
-                    <button id="btn-asignar-horario" class="btn-login" style="background:#007bff; margin-top:10px;">Actualizar Horario</button>
-                </section>
+                <div id="nav-admin" style="display:none; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
+                    <button onclick="switchView('view-reportes')" class="btn-nav">📊 Consultas y Justificaciones</button>
+                </div>
+                <div id="nav-jefe" style="display:none; margin-top: 10px;">
+                    <button onclick="switchView('view-horarios')" class="btn-nav" style="background:#007bff;">📅 Gestionar Horarios Semanales</button>
+                </div>
+            </section>
 
-                <section id="admin-section" class="card" style="display:none;">
-                    <h3>Reporte de Asistencia</h3>
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Nombre</th>
-                                    <th>Entrada</th>
-                                    <th>Salida</th>
-                                    <th>Estado</th>
-                                    <th>Justificación</th>
-                                    <th>Acción</th>
-                                </tr>
-                            </thead>
-                            <tbody id="report-body"></tbody>
-                        </table>
-                    </div>
-                </section>
-            </main>
+            <section id="view-reportes" class="card" style="display:none;">
+                <button onclick="switchView('view-checador')" class="btn-small">⬅ Volver al Checador</button>
+                <h3>Reportes y Justificaciones</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Entrada/Salida</th>
+                                <th>Estado</th>
+                                <th>Justificación</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="report-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="view-horarios" class="card" style="display:none;">
+                <button onclick="switchView('view-checador')" class="btn-small">⬅ Volver al Checador</button>
+                <h3>Gestión de Horario Semanal</h3>
+                <select id="select-empleado"><option value="">Seleccionar Empleado...</option></select>
+                
+                <div class="grid-semanal">
+                    <div id="contenedor-semanal"></div>
+                </div>
+                <button id="btn-guardar-semana" class="btn-login" style="margin-top:15px;">GUARDAR HORARIO SEMANAL</button>
+            </section>
         </div>
     </div>
     <script type="module" src="app.js"></script>
