@@ -1,20 +1,191 @@
-:root { --primary: #1e293b; --green: #10b981; --red: #ef4444; --blue: #3b82f6; --gray: #f8fafc; }
-body { font-family: 'Inter', system-ui, sans-serif; background: var(--gray); margin: 0; padding: 10px; }
-.card { background: white; padding: 2rem; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; max-width: 450px; margin: auto; }
-#live-clock { font-size: 3.5rem; color: var(--primary); margin: 0; font-weight: 800; }
-.input-group { margin: 20px 0; }
-input { width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1.1rem; box-sizing: border-box; margin-bottom: 10px; }
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, collection, query, where, getDocs, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-.check-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-.btn-check { border: none; padding: 25px; border-radius: 12px; color: white; font-weight: 700; cursor: pointer; transition: 0.2s; }
-.in { background: var(--green); }
-.out { background: var(--red); }
-.btn-check:active { transform: scale(0.95); }
+const firebaseConfig = {
+    apiKey: "TU_API_KEY",
+    authDomain: "TU_DOMINIO.firebaseapp.com",
+    projectId: "TU_PROJECT_ID",
+    storageBucket: "TU_BUCKET.appspot.com",
+    messagingSenderId: "TU_SENDER_ID",
+    appId: "TU_APP_ID"
+};
 
-.admin-nav { background: var(--primary); display: flex; justify-content: space-around; padding: 15px; border-radius: 15px; margin-bottom: 20px; }
-.admin-nav button { background: transparent; color: white; border: 1px solid #ffffff44; padding: 8px 15px; border-radius: 8px; cursor: pointer; }
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-.table-container { overflow-x: auto; background: white; border-radius: 10px; }
-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-th, td { padding: 12px; border-bottom: 1px solid #f1f5f9; text-align: left; }
-.dia-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
+const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+let userCoords = null;
+
+// --- GEOLOCALIZACIÓN ---
+navigator.geolocation.watchPosition(
+    (p) => {
+        userCoords = { lat: p.coords.latitude, lng: p.coords.longitude };
+        document.getElementById('geo-status').innerText = "📍 Ubicación detectada correctamente";
+        document.getElementById('geo-status').style.color = "green";
+    },
+    () => { document.getElementById('geo-status').innerText = "⚠️ Activa el GPS para checar"; }
+);
+
+// --- RELOJ ---
+setInterval(() => {
+    const ahora = new Date();
+    document.getElementById('live-clock').innerText = ahora.toLocaleTimeString();
+    document.getElementById('live-date').innerText = ahora.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+}, 1000);
+
+// --- CHECADOR (PARA EMPLEADOS) ---
+async function procesarRegistro(tipo) {
+    const num = document.getElementById('emp-number').value;
+    const pin = document.getElementById('emp-pin').value;
+
+    if (!num || !pin || !userCoords) return alert("Completa tus datos y activa el GPS");
+
+    // Validar empleado
+    const q = query(collection(db, "usuarios"), where("numero_empleado", "==", num), where("pin", "==", pin));
+    const snap = await getDocs(q);
+
+    if (snap.empty) return alert("Número de empleado o PIN incorrectos");
+
+    const uDoc = snap.docs[0];
+    const uData = uDoc.data();
+    const hoy = new Date();
+    const nombreDia = DIAS[hoy.getDay() === 0 ? 6 : hoy.getDay() - 1];
+    
+    // Obtener configuración de horario para hoy
+    const configHoy = uData.horario_semanal?.[nombreDia] || { tipo: 'laboral', hora: 9 };
+
+    if (configHoy.tipo !== 'laboral') return alert(`Hoy es tu día: ${configHoy.tipo.toUpperCase()}`);
+
+    const fechaId = hoy.toISOString().split('T')[0];
+    const horaTexto = hoy.getHours() + ":" + hoy.getMinutes().toString().padStart(2, '0');
+    const docRef = doc(db, "asistencias", `${uDoc.id}_${fechaId}`);
+
+    if (tipo === 'entrada') {
+        let estatus = (hoy.getHours() > configHoy.hora || (hoy.getHours() == configHoy.hora && hoy.getMinutes() > 15)) ? "Retardo" : "A tiempo";
+        await setDoc(docRef, {
+            nombre: uData.nombre, area: uData.area, entrada: horaTexto,
+            estado: estatus, geo: userCoords, fecha: fechaId, uid: uDoc.id
+        }, { merge: true });
+    } else {
+        await updateDoc(docRef, { salida: horaTexto });
+    }
+
+    alert(`Registro de ${tipo} exitoso`);
+    document.getElementById('emp-number').value = "";
+    document.getElementById('emp-pin').value = "";
+}
+
+document.getElementById('btn-in').onclick = () => procesarRegistro('entrada');
+document.getElementById('btn-out').onclick = () => procesarRegistro('salida');
+
+// --- ACCESO ADMINISTRATIVO ---
+document.getElementById('btn-open-admin').onclick = () => {
+    const email = prompt("Correo de Administrador:");
+    const pass = prompt("Contraseña:");
+    if (email && pass) {
+        signInWithEmailAndPassword(auth, email, pass).catch(() => alert("Credenciales inválidas"));
+    }
+};
+
+onAuthStateChanged(auth, async (user) => {
+    if (user) {
+        const d = await getDoc(doc(db, "usuarios", user.uid));
+        if (d.exists()) {
+            const perfil = d.data();
+            if (perfil.rol === 'admin' || perfil.rol === 'supervisor') {
+                document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+                document.getElementById('view-admin').classList.add('active');
+                initAdminPanel(perfil);
+            }
+        }
+    }
+});
+
+document.getElementById('btn-logout').onclick = () => {
+    signOut(auth).then(() => location.reload());
+};
+
+// --- PANEL DE CONTROL (ADMIN/JEFES) ---
+window.showSection = (id) => {
+    document.querySelectorAll('.admin-sec').forEach(s => s.style.display = 'none');
+    document.getElementById(id).style.display = 'block';
+};
+
+function initAdminPanel(perfil) {
+    // 1. Cargar Reportes (Si es Jefe, filtrar por área)
+    const qReportes = (perfil.rol === 'admin') 
+        ? collection(db, "asistencias") 
+        : query(collection(db, "asistencias"), where("area", "==", perfil.area));
+
+    onSnapshot(qReportes, (snap) => {
+        const body = document.getElementById('report-table-body');
+        body.innerHTML = "";
+        snap.forEach(docSnap => {
+            const r = docSnap.data();
+            const mapLink = `https://www.google.com/maps?q=${r.geo.lat},${r.geo.lng}`;
+            body.innerHTML += `
+                <tr>
+                    <td>${r.nombre}</td>
+                    <td>${r.entrada || '--'} / ${r.salida || '--'}</td>
+                    <td>${r.estado}</td>
+                    <td><a href="${mapLink}" target="_blank">Ver Mapa</a></td>
+                    <td>${r.justificacion || '<i>Pendiente</i>'}</td>
+                    <td><button onclick="justificar('${docSnap.id}')" class="btn-secondary">Justificar</button></td>
+                </tr>`;
+        });
+    });
+
+    // 2. Cargar Personal para Horarios
+    cargarListaPersonal(perfil);
+}
+
+async function cargarListaPersonal(perfil) {
+    const q = (perfil.rol === 'admin') 
+        ? collection(db, "usuarios") 
+        : query(collection(db, "usuarios"), where("area", "==", perfil.area));
+    
+    const snap = await getDocs(q);
+    const select = document.getElementById('select-staff');
+    select.innerHTML = '<option value="">Seleccione personal...</option>';
+    snap.forEach(d => {
+        if(d.data().rol !== 'admin') select.innerHTML += `<option value="${d.id}">${d.data().nombre}</option>`;
+    });
+}
+
+// Generar inputs de la semana
+const grid = document.getElementById('grid-semana');
+DIAS.forEach(dia => {
+    grid.innerHTML += `
+        <div class="dia-row">
+            <span>${dia}</span>
+            <select id="tipo-${dia}">
+                <option value="laboral">Laboral</option>
+                <option value="franco">Franco</option>
+                <option value="vacaciones">Vacaciones</option>
+            </select>
+            <input type="number" id="hora-${dia}" value="9" style="width:50px">
+        </div>`;
+});
+
+document.getElementById('btn-save-schedule').onclick = async () => {
+    const uid = document.getElementById('select-staff').value;
+    if (!uid) return alert("Selecciona un empleado");
+    
+    let horario = {};
+    DIAS.forEach(dia => {
+        horario[dia] = {
+            tipo: document.getElementById(`tipo-${dia}`).value,
+            hora: parseInt(document.getElementById(`hora-${dia}`).value)
+        };
+    });
+
+    await updateDoc(doc(db, "usuarios", uid), { horario_semanal: horario });
+    alert("Horario actualizado correctamente");
+};
+
+window.justificar = async (id) => {
+    const motivo = prompt("Ingrese el motivo de la justificación:");
+    if (m) await updateDoc(doc(db, "asistencias", id), { justificacion: motivo, estado: "Justificado" });
+};
