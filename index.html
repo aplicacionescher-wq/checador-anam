@@ -1,56 +1,70 @@
+¡Claro! Aquí tienes el archivo index.html completo y corregido. He incluido la estructura necesaria para que se vea bien en dispositivos móviles (como una PWA) y los IDs que el código de app.js necesita para funcionar.
+
+Asegúrate de que este archivo esté en la misma carpeta que tu style.css y tu app.js.
+
+HTML
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reloj Checador Valle Esmeralda</title>
+    
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#28a745">
+    
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2972/2972531.png">
 </head>
 <body>
     <div id="app">
+        
         <div id="login-screen">
-            <h1 style="text-align: center;">Reloj Checador</h1>
             <div class="card">
-                <input type="email" id="email" placeholder="Correo electrónico">
-                <input type="password" id="password" placeholder="Contraseña">
-                <button id="btn-login" class="btn-login">Ingresar</button>
+                <h1 style="margin-top: 0;">Bienvenido</h1>
+                <p>Ingresa tus credenciales para checar</p>
+                <input type="email" id="email" placeholder="Correo electrónico" required>
+                <input type="password" id="password" placeholder="Contraseña" required>
+                <button id="btn-login" class="btn-login">INGRESAR</button>
             </div>
         </div>
 
         <div id="main-panel" style="display:none;">
             <header>
-                <div id="user-info">Cargando datos...</div>
-                <button id="btn-logout" class="btn-small">Cerrar Sesión</button>
+                <div id="user-info" style="font-weight: bold;">Cargando usuario...</div>
+                <button id="btn-logout" class="btn-small">Salir</button>
             </header>
 
             <main>
                 <section class="card check-section">
                     <h2>Registro de Asistencia</h2>
-                    <p id="current-time" style="font-size: 1.8rem; font-weight: bold; color: #333;"></p>
+                    <p id="current-time" style="font-size: 2rem; font-weight: bold; color: #2c3e50; margin: 10px 0;"></p>
                     <button id="btn-check" class="btn-check">MARCAR ENTRADA</button>
-                    <div id="status-msg" style="margin-top: 15px;"></div>
+                    <div id="status-msg"></div>
                 </section>
 
                 <section id="admin-section" class="card" style="display:none;">
-                    <h3>Control de Incidencias</h3>
+                    <h3 style="text-align: left; border-bottom: 2px solid #eee; padding-bottom: 10px;">
+                        Control de Personal e Incidencias
+                    </h3>
                     <div class="table-container">
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Personal</th>
+                                    <th>Empleado</th>
                                     <th>Estado</th>
-                                    <th>Justificación</th>
+                                    <th>Justificación / Alcance</th>
                                     <th>Acción</th>
                                 </tr>
                             </thead>
-                            <tbody id="report-body"></tbody>
+                            <tbody id="report-body">
+                                </tbody>
                         </table>
                     </div>
                 </section>
             </main>
         </div>
+
     </div>
 
     <script type="module" src="app.js"></script>
