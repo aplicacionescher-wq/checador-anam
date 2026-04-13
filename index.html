@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reloj Checador Pro</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <div id="login-screen">
+            <h1>Reloj Checador</h1>
+            <input type="email" id="email" placeholder="Correo electrónico">
+            <input type="password" id="password" placeholder="Contraseña">
+            <button id="btn-login">Ingresar</button>
+        </div>
+
+        <div id="main-panel" style="display:none;">
+            <nav>
+                <span id="user-info"></span>
+                <button id="btn-logout">Salir</button>
+            </nav>
+
+            <section id="check-in-section">
+                <h2>Registro de Asistencia</h2>
+                <button id="btn-check" class="btn-primary">MARCAR ENTRADA</button>
+                <p id="status-msg"></p>
+            </section>
+
+            <section id="admin-section" style="display:none;">
+                <hr>
+                <h2>Gestión de Área</h2>
+                <div class="controls">
+                    <button id="btn-view-report">Ver Reporte del Día</button>
+                </div>
+                <table id="report-table">
+                    <thead>
+                        <tr>
+                            <th>Empleado</th>
+                            <th>Entrada</th>
+                            <th>Estado</th>
+                            <th>Justificación</th>
+                        </tr>
+                    </thead>
+                    <tbody id="report-body"></tbody>
+                </table>
+            </section>
+        </div>
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
