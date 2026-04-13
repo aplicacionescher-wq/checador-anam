@@ -3,70 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema Valle Esmeralda</title>
+    <title>Sistema Empresarial - Valle Esmeralda</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="manifest" href="manifest.json">
 </head>
 <body>
     <div id="app">
-        <div id="login-screen">
+        <div id="login-screen" class="view">
             <div class="card">
-                <h1>Acceso al Sistema</h1>
-                <input type="email" id="email" placeholder="Correo electrónico">
+                <h2>Acceso Corporativo</h2>
+                <input type="email" id="email" placeholder="Usuario (Correo)">
                 <input type="password" id="password" placeholder="Contraseña">
-                <button id="btn-login" class="btn-login">ENTRAR</button>
+                <button id="btn-login" class="btn-primary">Entrar al Sistema</button>
             </div>
         </div>
 
-        <div id="main-panel" style="display:none;">
-            <header>
-                <div id="user-info">Cargando...</div>
-                <button id="btn-logout" class="btn-small">Cerrar Sesión</button>
+        <div id="main-panel" class="view" style="display:none;">
+            <nav id="navbar" style="display:none;">
+                <button onclick="switchView('view-checador')">🕒 Checador</button>
+                <button id="nav-horarios" onclick="switchView('view-horarios')" style="display:none;">📅 Horarios</button>
+                <button id="nav-reportes" onclick="switchView('view-reportes')" style="display:none;">📊 Reportes</button>
+                <button onclick="logout()" class="btn-logout">Cerrar</button>
+            </nav>
+
+            <header class="user-bar">
+                <span id="user-display">Usuario</span>
+                <span id="date-display"></span>
             </header>
 
-            <section id="view-checador" class="card">
-                <p id="current-time" style="font-size: 2.5rem; font-weight: bold; margin: 10px 0;"></p>
-                <div class="check-buttons">
-                    <button id="btn-check-in" class="btn-check btn-in">ENTRADA</button>
-                    <button id="btn-check-out" class="btn-check btn-out">SALIDA</button>
-                </div>
-                <div id="status-msg"></div>
-
-                <div id="nav-admin" class="nav-extra" style="display:none;">
-                    <button onclick="switchView('view-reportes')" class="btn-nav">📊 Panel de Consultas y Justificaciones</button>
-                </div>
-                <div id="nav-jefe" class="nav-extra" style="display:none;">
-                    <button onclick="switchView('view-horarios')" class="btn-nav" style="background:#007bff;">📅 Gestión de Horarios por Área</button>
-                </div>
-            </section>
-
-            <section id="view-reportes" class="card" style="display:none;">
-                <button onclick="switchView('view-checador')" class="btn-small">⬅ Volver</button>
-                <h3>Consultas y Justificaciones</h3>
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Personal</th>
-                                <th>E/S</th>
-                                <th>Estado</th>
-                                <th>Justificación</th>
-                                <th>Acción</th>
-                            </tr>
-                        </thead>
-                        <tbody id="report-body"></tbody>
-                    </table>
-                </div>
-            </section>
-
-            <section id="view-horarios" class="card" style="display:none;">
-                <button onclick="switchView('view-checador')" class="btn-small">⬅ Volver</button>
-                <h3>Configuración de Horario Semanal</h3>
-                <select id="select-empleado"><option value="">Seleccione al trabajador...</option></select>
-                
-                <div id="contenedor-semanal" class="grid-horarios">
+            <section id="view-checador" class="view-content">
+                <div class="card">
+                    <h1 id="live-clock">00:00:00</h1>
+                    <div class="check-grid">
+                        <button id="btn-in" class="btn-check in">REGISTRAR ENTRADA</button>
+                        <button id="btn-out" class="btn-check out">REGISTRAR SALIDA</button>
                     </div>
-                <button id="btn-guardar-semana" class="btn-login" style="margin-top:20px;">GUARDAR SEMANA</button>
+                    <div id="status-msg"></div>
+                </div>
+            </section>
+
+            <section id="view-horarios" class="view-content" style="display:none;">
+                <div class="card">
+                    <h3>Gestión de Personal por Área</h3>
+                    <select id="select-empleado"><option>Cargando personal...</option></select>
+                    <div id="semana-container">
+                        </div>
+                    <button id="btn-save-week" class="btn-primary">Guardar Rol Semanal</button>
+                </div>
+            </section>
+
+            <section id="view-reportes" class="view-content" style="display:none;">
+                <div class="card">
+                    <h3>Auditoría de Asistencias</h3>
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Colaborador</th>
+                                    <th>Horario</th>
+                                    <th>Estatus</th>
+                                    <th>Justificación</th>
+                                    <th>Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="report-table"></tbody>
+                        </table>
+                    </div>
+                </div>
             </section>
         </div>
     </div>
