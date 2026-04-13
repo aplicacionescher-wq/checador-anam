@@ -2,7 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, collection, query, where, onSnapshot, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// Configuración de Firebase corregida
+// 1. Configuración de tu Proyecto
 const firebaseConfig = {
   apiKey: "AIzaSyC6bo4zO4vUl7jbfm1sVS59GqoP3vJeyR0",
   authDomain: "checador-anam.firebaseapp.com",
@@ -12,122 +12,162 @@ const firebaseConfig = {
   appId: "1:376706550668:web:87e0e9f1cba7fcbe2824a9"
 };
 
-// Inicializar Firebase
+// 2. Inicialización
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Reloj en tiempo real
+// --- RELOJ EN TIEMPO REAL ---
 setInterval(() => {
-    const ahora = new Date();
     const pTime = document.getElementById('current-time');
-    if(pTime) pTime.innerText = ahora.toLocaleTimeString();
+    if (pTime) pTime.innerText = new Date().toLocaleTimeString();
 }, 1000);
 
-// LOGIN
-document.getElementById('btn-login').addEventListener('click', async () => {
-    const email = document.getElementById('email').value;
-    const pass = document.getElementById('password').value;
-    try {
-        await signInWithEmailAndPassword(auth, email, pass);
-    } catch (e) { 
-        alert("Error: Verifica tu correo y contraseña."); 
-    }
-});
+// --- MANEJO DE LOGIN ---
+const btnLogin = document.getElementById('btn-login');
+if (btnLogin) {
+    btnLogin.addEventListener('click', async () => {
+        const email = document.getElementById('email').value;
+        const pass = document.getElementById('password').value;
+        try {
+            await signInWithEmailAndPassword(auth, email, pass);
+        } catch (e) {
+            alert("Error de acceso: Verifica tus credenciales.");
+        }
+    });
+}
 
-// LOGOUT
-document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
+// --- MANEJO DE LOGOUT ---
+const btnLogout = document.getElementById('btn-logout');
+if (btnLogout) {
+    btnLogout.addEventListener('click', () => signOut(auth));
+}
 
-// MONITOR DE SESIÓN
+// --- MONITOR DE SESIÓN (ESTADO DEL USUARIO) ---
 onAuthStateChanged(auth, async (user) => {
+    const loginScreen = document.getElementById('login-screen');
+    const mainPanel = document.getElementById('main-panel');
+    const adminSection = document.getElementById('admin-section');
+
     if (user) {
-        document.getElementById('login-screen').style.display = 'none';
-        document.getElementById('main-panel').style.display = 'block';
-        
-        const docRef = doc(db, "usuarios", user.uid);
-        const snap = await getDoc(docRef);
-        
-        if (snap.exists()) {
-            const data = snap.data();
-            document.getElementById('user-info').innerText = `${data.nombre} | ${data.area}`;
-            
-            if (data.rol === 'admin' || data.rol === 'supervisor') {
-                document.getElementById('admin-section').style.display = 'block';
-                escucharAsistencias(data.area, data.rol);
+        if (loginScreen) loginScreen.style.display = 'none';
+        if (mainPanel) mainPanel.style.display = 'block';
+
+        try {
+            const userDoc = await getDoc(doc(db, "usuarios", user.uid));
+            if (snapExists(userDoc)) {
+                const data = userDoc.data();
+                document.getElementById('user-info').innerText = `${data.nombre} | ${data.area}`;
+
+                // Mostrar sección administrativa si es Admin o Supervisor
+                if (data.rol === 'admin' || data.rol === 'supervisor') {
+                    if (adminSection) adminSection.style.display = 'block';
+                    escucharAsistencias(data.area, data.rol);
+                }
             }
+        } catch (error) {
+            console.error("Error cargando perfil:", error);
         }
     } else {
-        document.getElementById('login-screen').style.display = 'block';
-        document.getElementById('main-panel').style.display = 'none';
+        if (loginScreen) loginScreen.style.display = 'block';
+        if (mainPanel) mainPanel.style.display = 'none';
+        if (adminSection) adminSection.style.display = 'none';
     }
 });
 
-// MARCAR ASISTENCIA
-document.getElementById('btn-check').addEventListener('click', async () => {
-    const user = auth.currentUser;
-    const userDoc = await getDoc(doc(db, "usuarios", user.uid));
-    const { horario_base, nombre, area } = userDoc.data();
+// Helper para verificar si el snap existe
+function snapExists(snap) {
+    return snap && typeof snap.exists === 'function' && snap.exists();
+}
 
-    const ahora = new Date();
-    const horaActual = ahora.getHours();
-    const minActual = ahora.getMinutes();
-    const fechaHoy = ahora.toISOString().split('T')[0];
+// --- REGISTRAR ASISTENCIA (LÓGICA DE 15 MIN) ---
+const btnCheck = document.getElementById('btn-check');
+if (btnCheck) {
+    btnCheck.addEventListener('click', async () => {
+        const user = auth.currentUser;
+        if (!user) return;
 
-    // Lógica de Tolerancia: 15 minutos
-    let estado = "A tiempo";
-    if (horaActual > horario_base || (horaActual === horario_base && minActual > 15)) {
-        estado = "Retardo";
-    }
+        try {
+            const userSnap = await getDoc(doc(db, "usuarios", user.uid));
+            const { horario_base, nombre, area } = userSnap.data();
 
-    try {
-        await setDoc(doc(db, "asistencias", `${user.uid}_${fechaHoy}`), {
-            uid: user.uid,
-            nombre,
-            area,
-            fecha: fechaHoy,
-            hora_entrada: `${horaActual}:${minActual < 10 ? '0'+minActual : minActual}`,
-            estado,
-            justificacion: "",
-            timestamp: serverTimestamp()
-        });
-        document.getElementById('status-msg').innerHTML = `<b style="color:var(--primary)">¡Registro Guardado: ${estado}!</b>`;
-    } catch (e) { 
-        console.error(e);
-        alert("Error al registrar entrada."); 
-    }
-});
+            const ahora = new Date();
+            const horaActual = ahora.getHours();
+            const minActual = ahora.getMinutes();
+            const fechaHoy = ahora.toISOString().split('T')[0];
 
-// LEER ASISTENCIAS EN TIEMPO REAL
-function escucharAsistencias(area, rol) {
-    const q = (rol === 'admin') 
-        ? collection(db, "asistencias") 
-        : query(collection(db, "asistencias"), where("area", "==", area));
+            // REGLA: Tolerancia de 15 minutos
+            let estado = "A tiempo";
+            if (horaActual > horario_base || (horaActual === horario_base && minActual > 15)) {
+                estado = "Retardo";
+            }
+
+            // Guardar registro
+            await setDoc(doc(db, "asistencias", `${user.uid}_${fechaHoy}`), {
+                uid: user.uid,
+                nombre: nombre,
+                area: area,
+                fecha: fechaHoy,
+                hora_entrada: `${horaActual}:${minActual < 10 ? '0' + minActual : minActual}`,
+                estado: estado,
+                justificacion: "",
+                timestamp: serverTimestamp()
+            });
+
+            const statusMsg = document.getElementById('status-msg');
+            statusMsg.innerHTML = `<b style="color:${estado === 'A tiempo' ? 'green' : 'red'}">¡Registrado: ${estado}!</b>`;
+        } catch (e) {
+            console.error("Error al marcar:", e);
+            alert("Hubo un problema al registrar tu entrada.");
+        }
+    });
+}
+
+// --- REPORTES EN TIEMPO REAL ---
+function escucharAsistencias(areaUsuario, rolUsuario) {
+    const asistenciasCol = collection(db, "asistencias");
+    
+    // Si es Admin ve todo, si es Supervisor solo su área
+    const q = (rolUsuario === 'admin') 
+        ? query(asistenciasCol) 
+        : query(asistenciasCol, where("area", "==", areaUsuario));
 
     onSnapshot(q, (snapshot) => {
         const tbody = document.getElementById('report-body');
+        if (!tbody) return;
         tbody.innerHTML = "";
+
         snapshot.forEach((docSnap) => {
             const res = docSnap.data();
             const fila = `
                 <tr>
                     <td>${res.nombre}</td>
-                    <td class="${res.estado === 'Retardo' ? 'retardo' : ''}">${res.estado}</td>
-                    <td>${res.justificacion || '<i>Pendiente</i>'}</td>
+                    <td style="color:${res.estado === 'Retardo' ? 'red' : 'black'}"><b>${res.estado}</b></td>
+                    <td>${res.justificacion || '<i>Sin justificación</i>'}</td>
                     <td>
-                        <button onclick="justificarAlcance('${docSnap.id}')" class="btn-small">Justificar</button>
+                        <button class="btn-small" onclick="window.justificar('${docSnap.id}')">Justificar</button>
                     </td>
                 </tr>
             `;
             tbody.innerHTML += fila;
         });
+    }, (error) => {
+        console.error("Error en el listener de reportes:", error);
     });
 }
 
-// Función global para el botón de la tabla
-window.justificarAlcance = async (id) => {
-    const motivo = prompt("Escriba la razón del alcance/justificación:");
+// --- FUNCIÓN PARA JUSTIFICAR (ALCANCES) ---
+window.justificar = async (idAsistencia) => {
+    const motivo = prompt("Ingrese la justificación para este registro:");
     if (motivo) {
-        const docRef = doc(db, "asistencias", id);
-        await updateDoc(docRef, { justificacion: motivo });
+        try {
+            const docRef = doc(db, "asistencias", idAsistencia);
+            await updateDoc(docRef, { 
+                justificacion: motivo 
+            });
+            alert("Justificación guardada.");
+        } catch (e) {
+            alert("Error al guardar justificación.");
+        }
     }
 };
