@@ -3,67 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Valle Esmeralda - ERP Asistencia</title>
+    <title>Sistema Valle Esmeralda - Asistencia</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="app">
         <section id="view-checador" class="view active">
             <div class="card">
-                <div class="header-logo">🏢 Valle Esmeralda</div>
+                <div class="brand">🏢 Valle Esmeralda</div>
                 <h1 id="live-clock">00:00:00</h1>
-                <p id="live-date"></p>
+                <p id="live-date">---</p>
                 
-                <div class="input-group">
-                    <input type="number" id="emp-number" placeholder="Número de Empleado">
-                    <input type="password" id="emp-pass" placeholder="PIN">
+                <div class="check-inputs">
+                    <input type="number" id="emp-number" placeholder="Núm. de Empleado" autocomplete="off">
+                    <input type="password" id="emp-pin" placeholder="PIN de Acceso" autocomplete="off">
                 </div>
 
                 <div class="check-actions">
-                    <button id="btn-in" class="btn-check in">ENTRADA</button>
-                    <button id="btn-out" class="btn-check out">SALIDA</button>
+                    <button id="btn-in" class="btn-check in">REGISTRAR ENTRADA</button>
+                    <button id="btn-out" class="btn-check out">REGISTRAR SALIDA</button>
                 </div>
                 
-                <p id="geo-status" class="status-pending">Obteniendo ubicación...</p>
-                <button id="btn-admin-access" class="btn-link">Acceso Administrativo</button>
+                <div id="geo-status" class="status-warning">Detectando GPS...</div>
+                
+                <hr>
+                <button id="btn-open-admin" class="btn-secondary">Acceso Administrativo / Jefes</button>
             </div>
         </section>
 
         <section id="view-admin" class="view">
             <nav class="admin-nav">
-                <button onclick="switchTab('tab-reportes')">📊 Reportes</button>
-                <button onclick="switchTab('tab-horarios')">📅 Horarios</button>
-                <button id="btn-exit" class="btn-exit">Salir</button>
+                <div class="nav-brand">Panel de Gestión</div>
+                <div class="nav-buttons">
+                    <button onclick="showSection('sec-reportes')">📊 Reportes</button>
+                    <button onclick="showSection('sec-horarios')">📅 Horarios</button>
+                    <button id="btn-logout" class="btn-danger-small">Cerrar Sesión</button>
+                </div>
             </nav>
 
             <div class="admin-container">
-                <div id="tab-reportes" class="tab-content">
-                    <h3>Auditoría de Asistencias y Retardos</h3>
+                <div id="sec-reportes" class="admin-sec">
+                    <h3>Consulta de Asistencias y Retardos</h3>
                     <div class="table-container">
                         <table>
                             <thead>
                                 <tr>
                                     <th>Empleado</th>
-                                    <th>Registro</th>
+                                    <th>Entrada / Salida</th>
                                     <th>Estatus</th>
-                                    <th>Mapa</th>
-                                    <th>Justificar</th>
+                                    <th>Ubicación</th>
+                                    <th>Justificación</th>
+                                    <th>Acción</th>
                                 </tr>
                             </thead>
-                            <tbody id="report-body"></tbody>
+                            <tbody id="report-table-body"></tbody>
                         </table>
                     </div>
                 </div>
 
-                <div id="tab-horarios" class="tab-content" style="display:none;">
-                    <h3>Gestión de Personal y Roles</h3>
-                    <select id="select-staff"><option>Cargando personal...</option></select>
-                    <div id="grid-semana" class="grid-semana"></div>
-                    <button id="btn-save-rol" class="btn-primary">Actualizar Semana</button>
+                <div id="sec-horarios" class="admin-sec" style="display:none;">
+                    <h3>Gestión de Horarios y Vacaciones</h3>
+                    <div class="config-box">
+                        <select id="select-staff">
+                            <option value="">Seleccione un trabajador...</option>
+                        </select>
+                        <div id="grid-semana" class="grid-semana">
+                            </div>
+                        <button id="btn-save-schedule" class="btn-primary">Guardar Horario Semanal</button>
+                    </div>
                 </div>
             </div>
         </section>
     </div>
+
     <script type="module" src="app.js"></script>
 </body>
 </html>
