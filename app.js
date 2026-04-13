@@ -2,23 +2,26 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, collection, query, where, onSnapshot, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+// Configuración de Firebase corregida
 const firebaseConfig = {
   apiKey: "AIzaSyC6bo4zO4vUl7jbfm1sVS59GqoP3vJeyR0",
   authDomain: "checador-anam.firebaseapp.com",
   projectId: "checador-anam",
   storageBucket: "checador-anam.firebasestorage.app",
-  mensajesSenderId: "376706550668",
-  appId: "1:376706550668:web:87e0e9f1cba7fcbe2824a9"}; InicializarFirebase const app = initializeApp(firebaseConfig
+  messagingSenderId: "376706550668",
+  appId: "1:376706550668:web:87e0e9f1cba7fcbe2824a9"
 };
 
+// Inicializar Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Actualizar reloj en pantalla
+// Reloj en tiempo real
 setInterval(() => {
     const ahora = new Date();
-    document.getElementById('current-time').innerText = ahora.toLocaleTimeString();
+    const pTime = document.getElementById('current-time');
+    if(pTime) pTime.innerText = ahora.toLocaleTimeString();
 }, 1000);
 
 // LOGIN
@@ -27,36 +30,37 @@ document.getElementById('btn-login').addEventListener('click', async () => {
     const pass = document.getElementById('password').value;
     try {
         await signInWithEmailAndPassword(auth, email, pass);
-    } catch (e) { alert("Usuario o contraseña incorrectos."); }
+    } catch (e) { 
+        alert("Error: Verifica tu correo y contraseña."); 
+    }
 });
 
 // LOGOUT
 document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
 
-// MONITOR DE ESTADO DE SESIÓN
+// MONITOR DE SESIÓN
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('main-panel').style.display = 'block';
-        cargarDatosUsuario(user.uid);
+        
+        const docRef = doc(db, "usuarios", user.uid);
+        const snap = await getDoc(docRef);
+        
+        if (snap.exists()) {
+            const data = snap.data();
+            document.getElementById('user-info').innerText = `${data.nombre} | ${data.area}`;
+            
+            if (data.rol === 'admin' || data.rol === 'supervisor') {
+                document.getElementById('admin-section').style.display = 'block';
+                escucharAsistencias(data.area, data.rol);
+            }
+        }
     } else {
         document.getElementById('login-screen').style.display = 'block';
         document.getElementById('main-panel').style.display = 'none';
     }
 });
-
-async function cargarDatosUsuario(uid) {
-    const docRef = doc(db, "usuarios", uid);
-    const snap = await getDoc(docRef);
-    if (snap.exists()) {
-        const data = snap.data();
-        document.getElementById('user-info').innerText = `${data.nombre} | ${data.area}`;
-        if (data.rol === 'admin' || data.rol === 'supervisor') {
-            document.getElementById('admin-section').style.display = 'block';
-            cargarReportes(data.area, data.rol);
-        }
-    }
-}
 
 // MARCAR ASISTENCIA
 document.getElementById('btn-check').addEventListener('click', async () => {
@@ -69,8 +73,8 @@ document.getElementById('btn-check').addEventListener('click', async () => {
     const minActual = ahora.getMinutes();
     const fechaHoy = ahora.toISOString().split('T')[0];
 
+    // Lógica de Tolerancia: 15 minutos
     let estado = "A tiempo";
-    // Tolerancia de 15 minutos
     if (horaActual > horario_base || (horaActual === horario_base && minActual > 15)) {
         estado = "Retardo";
     }
@@ -86,13 +90,16 @@ document.getElementById('btn-check').addEventListener('click', async () => {
             justificacion: "",
             timestamp: serverTimestamp()
         });
-        document.getElementById('status-msg').innerHTML = `<b style="color:green">Registro exitoso: ${estado}</b>`;
-    } catch (e) { alert("Error al registrar."); }
+        document.getElementById('status-msg').innerHTML = `<b style="color:var(--primary)">¡Registro Guardado: ${estado}!</b>`;
+    } catch (e) { 
+        console.error(e);
+        alert("Error al registrar entrada."); 
+    }
 });
 
-// CARGAR REPORTES EN TIEMPO REAL
-function cargarReportes(area, rol) {
-    const q = rol === 'admin' 
+// LEER ASISTENCIAS EN TIEMPO REAL
+function escucharAsistencias(area, rol) {
+    const q = (rol === 'admin') 
         ? collection(db, "asistencias") 
         : query(collection(db, "asistencias"), where("area", "==", area));
 
@@ -105,9 +112,9 @@ function cargarReportes(area, rol) {
                 <tr>
                     <td>${res.nombre}</td>
                     <td class="${res.estado === 'Retardo' ? 'retardo' : ''}">${res.estado}</td>
-                    <td>${res.justificacion || '<i>Sin justificar</i>'}</td>
+                    <td>${res.justificacion || '<i>Pendiente</i>'}</td>
                     <td>
-                        <button onclick="justificar('${docSnap.id}')" class="btn-small">Justificar</button>
+                        <button onclick="justificarAlcance('${docSnap.id}')" class="btn-small">Justificar</button>
                     </td>
                 </tr>
             `;
@@ -116,10 +123,11 @@ function cargarReportes(area, rol) {
     });
 }
 
-// Función global para justificar (necesaria para el onclick del string)
-window.justificar = async (id) => {
-    const motivo = prompt("Ingrese la justificación:");
+// Función global para el botón de la tabla
+window.justificarAlcance = async (id) => {
+    const motivo = prompt("Escriba la razón del alcance/justificación:");
     if (motivo) {
-        await updateDoc(doc(db, "asistencias", id), { justificacion: motivo });
+        const docRef = doc(db, "asistencias", id);
+        await updateDoc(docRef, { justificacion: motivo });
     }
 };
