@@ -4,12 +4,12 @@ import { getFirestore, doc, getDoc, setDoc, collection, query, where, getDocs, s
 
 // CONFIGURACIÓN DE TU PROYECTO (Obtenla en la consola de Firebase)
 const firebaseConfig = {
-  apiKey: "TU_API_KEY",
-  authDomain: "TU_PROYECTO.firebaseapp.com",
-  projectId: "TU_PROYECTO",
-  storageBucket: "TU_PROYECTO.appspot.com",
-  messagingSenderId: "TU_ID",
-  appId: "TU_APP_ID"
+  apiKey: "AIzaSyC6bo4zO4vUl7jbfm1sVS59GqoP3vJeyR0",
+  authDomain: "checador-anam.firebaseapp.com",
+  projectId: "checador-anam",
+  storageBucket: "checador-anam.firebasestorage.app",
+  mensajesSenderId: "376706550668",
+  appId: "1:376706550668:web:87e0e9f1cba7fcbe2824a9"}; InicializarFirebase const app = initializeApp(firebaseConfig
 };
 
 const app = initializeApp(firebaseConfig);
